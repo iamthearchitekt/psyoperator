@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PSYOPERATOR</title>
+<style>
+  :root {
+    --void: #020203;
+    --panel: #060507;
+    --border-dim: #26060b;
+    --border-blood: #6e0714;
+    --crimson: #e6001f;
+    --crimson-bright: #ff0026;
+    --crimson-dark: #4d000a;
+    --bone: #ded8d8;
+    --ash: #786b6d;
+  }
+  @keyframes pulseThreat {
+    0%, 100% { box-shadow: 0 0 22px rgba(230, 0, 31, 0.25), inset 0 0 16px rgba(140, 0, 18, 0.25); }
+    50% { box-shadow: 0 0 38px rgba(255, 0, 38, 0.55), inset 0 0 28px rgba(230, 0, 31, 0.45); }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: var(--void);
+    background-image:
+      radial-gradient(ellipse at 50% 0%, rgba(120, 0, 15, 0.22) 0%, rgba(2, 2, 3, 0.98) 70%);
+    color: var(--bone);
+    font-family: "Consolas", "JetBrains Mono", "Lucida Console", "Courier New", monospace;
+    padding: 16px 22px 30px 22px;
+    max-width: 1040px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+    user-select: none;
+  }
+  .header-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #060304;
+    border: 1px solid var(--border-blood);
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .brand-cluster {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .eye-sigil {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 8px rgba(255, 0, 38, 0.65));
+  }
+  .title-stack h1 {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 7px;
+    color: #ffffff;
+    text-shadow: -2px 0 var(--crimson), 2px 0 #3d0008;
+    line-height: 1;
+  }
+  #eegCanvas {
+    width: 220px;
+    height: 38px;
+    background: #030102;
+    border: 1px solid #3d060d;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border-dim);
+    border-left: 3px solid var(--border-blood);
+    padding: 13px 16px;
+    margin-bottom: 11px;
+    position: relative;
+    box-shadow: inset 0 0 32px rgba(0, 0, 0, 0.95);
+  }
+  .dropzone {
+    border: 1px dashed var(--border-blood);
+    border-left: 4px solid var(--crimson);
+    background: linear-gradient(180deg, #0c0305 0%, #040102 100%);
+    text-align: center;
+    padding: 18px;
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  .dropzone.dragover, .dropzone:hover {
+    border-color: var(--crimson-bright);
+    background: #160307;
+    box-shadow: 0 0 28px rgba(255, 0, 38, 0.2), inset 0 0 22px rgba(255, 0, 38, 0.14);
+  }
+  .drop-title {
+    font-size: 15px;
+    font-weight: 900;
+    margin-bottom: 5px;
+    color: #ffffff;
+    letter-spacing: 1.5px;
+  }
+  .drop-meta {
+    font-size: 11px;
+    color: var(--ash);
+    margin-bottom: 11px;
+    letter-spacing: 0.6px;
+  }
+  .upload-bar-wrap {
+    height: 6px;
+    background: #040102;
+    border: 1px solid var(--border-blood);
+    overflow: hidden;
+    margin: 10px auto;
+    max-width: 520px;
+    display: none;
+  }
+  .upload-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--crimson-bright);
+    box-shadow: 0 0 12px var(--crimson-bright);
+    transition: width 0.12s;
+  }
+  .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  button {
+    background: #100306;
+    color: var(--bone);
+    border: 1px solid #4a0710;
+    padding: 7px 14px;
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.12s;
+  }
+  button:hover {
+    border-color: var(--crimson-bright);
+    background: #290309;
+    color: #fff;
+    box-shadow: 0 0 14px rgba(255, 0, 38, 0.35);
+  }
+  .mode-row { display: flex; gap: 10px; margin-bottom: 11px; }
+  .mode-btn {
+    flex: 1;
+    padding: 11px;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    background: #080304;
+    color: var(--ash);
+    border: 1px solid #2b060c;
+  }
+  .mode-btn.active {
+    background: linear-gradient(90deg, #2e0208, #120104);
+    border-color: var(--crimson-bright);
+    border-left: 4px solid var(--crimson-bright);
+    color: #ffffff;
+    box-shadow: 0 0 18px rgba(255, 0, 38, 0.25);
+  }
+  .preset-row { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
+  .preset-chip {
+    font-size: 10px;
+    padding: 6px 10px;
+    background: #0b0305;
+    border-color: #38060d;
+    color: #c2b2b4;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .field label {
+    display: block;
+    font-size: 10px;
+    font-weight: 900;
+    color: var(--crimson);
+    margin-bottom: 5px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+  }
+  .field input, .field select {
+    width: 100%;
+    background: #040102;
+    border: 1px solid #38070e;
+    color: #ffffff;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 12px;
+    outline: none;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--crimson-bright);
+    box-shadow: 0 0 10px rgba(255, 0, 38, 0.35);
+  }
+  .timeline-bar {
+    height: 38px;
+    background: #020101;
+    border: 1px solid #3d060d;
+    display: flex;
+    overflow: hidden;
+    margin-top: 8px;
+    position: relative;
+  }
+  .seg { height: 100%; border-right: 1px solid rgba(0, 0, 0, 0.8); position: relative; }
+  .legend-row {
+    display: flex;
+    gap: 14px;
+    margin-top: 6px;
+    font-size: 9px;
+    color: var(--ash);
+    letter-spacing: 1.2px;
+  }
+  .swatch {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+  .render-btn {
+    width: 100%;
+    height: 60px;
+    background: linear-gradient(180deg, #8a0012 0%, #380006 55%, #160002 100%);
+    border: 2px solid var(--crimson-bright);
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 5px;
+    color: #ffffff;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 4px;
+    animation: pulseThreat 2.2s infinite;
+    text-shadow: 0 0 12px rgba(255, 0, 38, 0.95);
+  }
+  .render-btn:hover {
+    background: linear-gradient(180deg, #bf001a 0%, #54000a 55%, #240004 100%);
+    letter-spacing: 6px;
+  }
+  .render-btn:disabled {
+    background: repeating-linear-gradient(
+      -45deg,
+      #1a0104,
+      #1a0104 14px,
+      #330309 14px,
+      #330309 28px
+    );
+    color: var(--crimson-bright);
+    cursor: wait;
+  }
+  .result-box {
+    margin-top: 13px;
+    display: none;
+    border: 1px solid var(--crimson-bright);
+    border-left: 4px solid var(--crimson-bright);
+    background: #050102;
+    box-shadow: 0 0 32px rgba(255, 0, 38, 0.22);
+  }
+  video {
+    width: 100%;
+    max-height: 420px;
+    background: #000;
+    border: 1px solid #3a060d;
+    margin-top: 10px;
+  }
+  .stats-badge {
+    background: #160205;
+    border: 1px solid #4d0711;
+    color: var(--crimson-bright);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    padding: 3px 9px;
+  }
+</style>
+</head>
+<body>
+  <div class="header-panel">
+    <div class="brand-cluster">
+      <svg class="eye-sigil" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,6 95,86 5,86" stroke="#ff0026" stroke-width="2.5" fill="rgba(120,0,16,0.12)"/>
+        <path d="M16 56 C32 34, 68 34, 84 56 C68 78, 32 78, 16 56 Z" stroke="#ded8d8" stroke-width="2.2" fill="#050102"/>
+        <circle cx="50" cy="56" r="13" stroke="#ff0026" stroke-width="2.2" fill="rgba(255,0,38,0.18)"/>
+        <circle cx="50" cy="56" r="4.5" fill="#ff0026"/>
+        <line x1="50" y1="22" x2="50" y2="38" stroke="#ff0026" stroke-width="1.5"/>
+        <line x1="50" y1="74" x2="50" y2="90" stroke="#ff0026" stroke-width="1.5"/>
+        <line x1="8" y1="56" x2="24" y2="56" stroke="#ff0026" stroke-width="1.5"/>
+        <line x1="76" y1="56" x2="92" y2="56" stroke="#ff0026" stroke-width="1.5"/>
+      </svg>
+      <div class="title-stack">
+        <h1>PSYOPERATOR</h1>
+      </div>
+    </div>
+    <canvas id="eegCanvas" width="220" height="38"></canvas>
+  </div>
+
+  <div class="card dropzone" id="dropzone">
+    <input type="file" id="fileInput" accept="video/*" style="display:none">
+    <div class="drop-title" id="videoTitle">DROP VIDEO HERE — OR CLICK TO SELECT</div>
+    <div class="drop-meta" id="videoMeta">MP4 / MOV / MKV / WEBM / AVI</div>
+    <div class="upload-bar-wrap" id="uploadBarWrap">
+      <div class="upload-bar-fill" id="uploadBarFill"></div>
+    </div>
+    <div class="btn-row">
+      <button onclick="event.stopPropagation(); pickVideoFile()">SELECT VIDEO</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="mode-row">
+      <button class="mode-btn active" id="modeSupercut" onclick="setMode('supercut')">
+        RAPID SUPERCUT
+      </button>
+      <button class="mode-btn" id="modeInsert" onclick="setMode('subliminal_insert')">
+        SUBLIMINAL INSERTS
+      </button>
+    </div>
+    <div class="preset-row">
+      <span style="font-size:10px;color:var(--crimson);font-weight:900;letter-spacing:1.5px;">PRESETS:</span>
+      <button class="preset-chip" onclick="applyPreset('supercut',55,35,110,30,45,'lethal','slice')">BLITZ (55× 35–110MS)</button>
+      <button class="preset-chip" onclick="applyPreset('supercut',80,33,45,20,60,'nightmare','demonic_slice')">1-FRAME (80× 33–45MS)</button>
+      <button class="preset-chip" onclick="applyPreset('subliminal_insert',16,33,65,15,50,'occult','slice')">INSERTS (16× FLASHES)</button>
+      <button class="preset-chip" onclick="applyPreset('supercut',65,40,135,45,70,'nightmare','demonic_slice')">CHAOS (65× 40–135MS)</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div class="field">
+        <label>CUT COUNT</label>
+        <input type="number" id="numCuts" value="50" min="3" max="160" onchange="refreshPlan()">
+      </div>
+      <div class="field">
+        <label>MIN CUT (MS)</label>
+        <input type="number" id="minMs" value="35" min="20" max="2000" step="5" onchange="refreshPlan()">
+      </div>
+      <div class="field">
+        <label>MAX CUT (MS)</label>
+        <input type="number" id="maxMs" value="130" min="25" max="3000" step="10" onchange="refreshPlan()">
+      </div>
+      <div class="field">
+        <label>VISUAL GRADE</label>
+        <select id="threatGrade" onchange="refreshPlan()">
+          <option value="lethal">DARK + VIGNETTE</option>
+          <option value="nightmare">RGB SPLIT + NOIR</option>
+          <option value="occult">CRIMSON + INVERT</option>
+          <option value="raw">ORIGINAL (RAW)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>AUDIO MODE</label>
+        <select id="audioMode">
+          <option value="slice">SLICE WITH CUTS</option>
+          <option value="demonic_slice">PITCH-DROP + CRUSH</option>
+          <option value="continuous">CONTINUOUS AUDIO</option>
+          <option value="mute">MUTE</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>STUTTER %</label>
+        <input type="number" id="stutterPct" value="25" min="0" max="75" step="5" onchange="refreshPlan()">
+      </div>
+      <div class="field">
+        <label>FLASH FX %</label>
+        <input type="number" id="fxPct" value="45" min="0" max="100" step="5" onchange="refreshPlan()">
+      </div>
+      <div class="field">
+        <label>BASE LENGTH (SEC)</label>
+        <input type="number" id="baseDur" value="15" min="0" max="600" step="5" onchange="refreshPlan()">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <span style="font-size:10px;font-weight:900;color:var(--crimson);letter-spacing:1.8px;">TIMELINE PREVIEW</span>
+      <span class="stats-badge" id="planStats">NO VIDEO LOADED</span>
+      <button onclick="rerollSeed()" style="padding:4px 10px;font-size:10px;">REROLL CUTS</button>
+    </div>
+    <div class="timeline-bar" id="timelineBar"></div>
+    <div class="legend-row">
+      <span><span class="swatch" style="background:#7a0012"></span>CUT</span>
+      <span><span class="swatch" style="background:#ff0026"></span>CRIMSON / RGB FX</span>
+      <span><span class="swatch" style="background:#e2dada"></span>INVERT FX</span>
+      <span><span class="swatch" style="background:#171215"></span>BASE CLIP</span>
+    </div>
+  </div>
+
+  <button class="render-btn" id="renderBtn" onclick="renderVideo()">RENDER</button>
+
+  <div class="card result-box" id="resultBox">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <span id="resultSummary" style="font-weight:900;color:var(--crimson-bright);letter-spacing:1.2px;font-size:11px;">RENDER COMPLETE</span>
+      <div style="display:flex;gap:8px;">
+        <a id="downloadLink" href="#" download style="display:none;color:#fff;background:#3b0209;border:1px solid var(--crimson-bright);padding:6px 14px;text-decoration:none;font-weight:900;font-size:11px;letter-spacing:1.4px;">DOWNLOAD MP4</a>
+        <button id="revealBtn" onclick="revealOutput()" style="display:none;background:#1c0206;border-color:var(--crimson-bright);">SHOW IN EXPLORER</button>
+        <button id="externalPlayBtn" onclick="playExternal()" style="display:none;background:#1c0206;border-color:var(--crimson-bright);">OPEN PLAYER</button>
+      </div>
+    </div>
+    <video id="outputVideo" controls autoplay playsinline></video>
+  </div>
+
+<script>
+  const hasElectron = Boolean(window.psyop && window.psyop.isElectron);
+  let currentPath = null;
+  let lastOutputPath = null;
+  let currentMode = 'supercut';
+  let currentSeed = Math.floor(Math.random() * 999999);
+  let activeUploadPromise = null;
+  let isRendering = false;
+
+  if (hasElectron) {
+    window.psyop.onRenderProgress(({ percent, message }) => {
+      const btn = document.getElementById('renderBtn');
+      if (isRendering) {
+        btn.textContent = `${message.toUpperCase()} (${Math.round(percent)}%)`;
+      }
+    });
+  }
+
+  (function initOscilloscope() {
+    const canvas = document.getElementById('eegCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let phase = 0;
+    function draw() {
+      ctx.fillStyle = 'rgba(3, 1, 2, 0.28)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath();
+      ctx.strokeStyle = isRendering ? '#ff0026' : '#a80018';
+      ctx.lineWidth = isRendering ? 1.8 : 1.3;
+      const mid = canvas.height / 2;
+      for (let x = 0; x < canvas.width; x++) {
+        let y = mid + Math.sin((x * 0.09) + phase) * 5 + Math.cos((x * 0.23) - phase * 1.7) * 3;
+        const spikeChance = isRendering ? 0.91 : 0.975;
+        if (Math.random() > spikeChance) {
+          y += (Math.random() - 0.5) * (isRendering ? 32 : 22);
+        }
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      phase += isRendering ? 0.35 : 0.14;
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+  const dz = document.getElementById('dropzone');
+  const fi = document.getElementById('fileInput');
+
+  dz.addEventListener('click', () => pickVideoFile());
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+  dz.addEventListener('drop', async e => {
+    e.preventDefault();
+    dz.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (hasElectron) {
+        const localPath = window.psyop.getPathForFile(file);
+        if (localPath) {
+          try {
+            const info = await window.psyop.probePath(localPath);
+            setVideoInfo(info);
+          } catch (err) {
+            alert('Failed to load video: ' + err.message);
+          }
+          return;
+        }
+      }
+      await uploadFileHttp(file);
+    }
+  });
+  fi.addEventListener('change', async () => {
+    if (fi.files.length > 0) await uploadFileHttp(fi.files[0]);
+  });
+
+  async function pickVideoFile() {
+    if (hasElectron) {
+      try {
+        const info = await window.psyop.openVideoDialog();
+        if (info) setVideoInfo(info);
+      } catch (err) {
+        alert('Error loading video: ' + err.message);
+      }
+    } else {
+      fi.click();
+    }
+  }
+
+  function uploadFileHttp(file) {
+    const btn = document.getElementById('renderBtn');
+    const barWrap = document.getElementById('uploadBarWrap');
+    const barFill = document.getElementById('uploadBarFill');
+    barWrap.style.display = 'block';
+    barFill.style.width = '0%';
+    btn.disabled = true;
+
+    activeUploadPromise = new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/upload', true);
+      xhr.upload.onprogress = e => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          const mbLoaded = (e.loaded / (1024 * 1024)).toFixed(1);
+          const mbTotal = (e.total / (1024 * 1024)).toFixed(1);
+          barFill.style.width = pct + '%';
+          document.getElementById('videoTitle').textContent =
+            `LOADING ${file.name.toUpperCase()}... ${pct}% (${mbLoaded} / ${mbTotal} MB)`;
+          btn.textContent = `LOADING VIDEO (${pct}%)...`;
+        }
+      };
+      xhr.onload = () => {
+        barWrap.style.display = 'none';
+        btn.disabled = false;
+        btn.textContent = 'RENDER';
+        activeUploadPromise = null;
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const info = JSON.parse(xhr.responseText);
+          setVideoInfo(info);
+          resolve(info);
+        } else {
+          alert('Upload failed: ' + xhr.responseText);
+          reject(new Error(xhr.responseText));
+        }
+      };
+      xhr.onerror = () => {
+        barWrap.style.display = 'none';
+        btn.disabled = false;
+        btn.textContent = 'RENDER';
+        activeUploadPromise = null;
+        alert('Upload error.');
+        reject(new Error('Upload error'));
+      };
+      const fd = new FormData();
+      fd.append('file', file);
+      xhr.send(fd);
+    });
+    return activeUploadPromise;
+  }
+
+  function setVideoInfo(info) {
+    currentPath = info.path;
+    document.getElementById('videoTitle').textContent = info.filename.toUpperCase();
+    document.getElementById('videoMeta').textContent =
+      `${info.width}×${info.height} • ${info.fps.toFixed(2)} FPS • ${info.duration.toFixed(2)}S • ${info.file_size_mb.toFixed(1)} MB`;
+    rerollSeed();
+  }
+
+  function setMode(m) {
+    currentMode = m;
+    document.getElementById('modeSupercut').classList.toggle('active', m === 'supercut');
+    document.getElementById('modeInsert').classList.toggle('active', m === 'subliminal_insert');
+    refreshPlan();
+  }
+
+  function applyPreset(mode, cuts, minMs, maxMs, stutter, fx, grade, audio) {
+    document.getElementById('numCuts').value = cuts;
+    document.getElementById('minMs').value = minMs;
+    document.getElementById('maxMs').value = maxMs;
+    document.getElementById('stutterPct').value = stutter;
+    document.getElementById('fxPct').value = fx;
+    if (grade) document.getElementById('threatGrade').value = grade;
+    if (audio) document.getElementById('audioMode').value = audio;
+    setMode(mode);
+  }
+
+  function rerollSeed() {
+    currentSeed = Math.floor(Math.random() * 9999999);
+    refreshPlan();
+  }
+
+  function buildPayload() {
+    return {
+      input_path: currentPath,
+      mode: currentMode,
+      num_cuts: parseInt(document.getElementById('numCuts').value || '50', 10),
+      min_cut_ms: parseInt(document.getElementById('minMs').value || '35', 10),
+      max_cut_ms: parseInt(document.getElementById('maxMs').value || '130', 10),
+      base_duration_sec: parseFloat(document.getElementById('baseDur').value || '15'),
+      audio_mode: document.getElementById('audioMode').value,
+      threat_grade: document.getElementById('threatGrade').value,
+      stutter_chance: parseInt(document.getElementById('stutterPct').value || '0', 10) / 100.0,
+      fx_chance: parseInt(document.getElementById('fxPct').value || '0', 10) / 100.0,
+      directive_chance: 0.0,
+      directives_csv: '',
+      seed: currentSeed
+    };
+  }
+
+  async function refreshPlan() {
+    if (!currentPath) return;
+    let data = null;
+    if (hasElectron) {
+      data = await window.psyop.generatePlan(buildPayload());
+    } else {
+      const res = await fetch('/api/plan', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(buildPayload())
+      });
+      if (res.ok) data = await res.json();
+    }
+    if (!data) return;
+    const bar = document.getElementById('timelineBar');
+    bar.innerHTML = '';
+    const total = data.total_duration || 1;
+    let subCount = 0;
+    let fxCount = 0;
+    data.segments.forEach(s => {
+      if (s.is_subliminal) subCount++;
+      if (s.effect && s.effect !== 'none') fxCount++;
+      const div = document.createElement('div');
+      div.className = 'seg';
+      div.style.width = Math.max(0.4, (s.duration_sec / total) * 100) + '%';
+      if (!s.is_subliminal) {
+        div.style.background = '#171215';
+      } else if (s.effect === 'abyss_invert') {
+        div.style.background = '#e2dada';
+      } else if (s.effect === 'necrotic_mono') {
+        div.style.background = '#5a4e50';
+      } else if (s.effect === 'rgb_trauma' || s.effect === 'blood_ritual') {
+        div.style.background = '#ff0026';
+      } else {
+        div.style.background = '#7a0012';
+      }
+      bar.appendChild(div);
+    });
+    document.getElementById('planStats').textContent =
+      `${subCount} CUTS • ${fxCount} FX • OUTPUT: ${data.total_duration.toFixed(2)}S`;
+  }
+
+  function showRenderOutput(data) {
+    lastOutputPath = data.output_path;
+    document.getElementById('resultBox').style.display = 'block';
+    document.getElementById('resultSummary').textContent =
+      `${data.num_segments} CUTS (${data.output_duration}S) RENDERED IN ${data.elapsed_sec}S -> ${data.output_path}`;
+    const vid = document.getElementById('outputVideo');
+    vid.src = hasElectron ? data.video_url : (data.video_url + '?t=' + Date.now());
+    vid.play().catch(() => {});
+    if (hasElectron) {
+      document.getElementById('revealBtn').style.display = 'inline-block';
+      document.getElementById('externalPlayBtn').style.display = 'inline-block';
+    } else {
+      const dl = document.getElementById('downloadLink');
+      dl.style.display = 'inline-block';
+      dl.href = data.video_url;
+      dl.download = data.output_filename;
+    }
+  }
+
+  function revealOutput() {
+    if (hasElectron && lastOutputPath) window.psyop.revealInFolder(lastOutputPath);
+  }
+
+  function playExternal() {
+    if (hasElectron && lastOutputPath) window.psyop.openExternalPlayer(lastOutputPath);
+  }
+
+  async function renderVideo() {
+    if (activeUploadPromise) await activeUploadPromise;
+    if (!currentPath) {
+      await pickVideoFile();
+      if (!currentPath) return;
+    }
+    const btn = document.getElementById('renderBtn');
+    btn.disabled = true;
+    isRendering = true;
+    btn.textContent = 'RENDERING (0%)...';
+
+    let pollTimer = null;
+    if (!hasElectron) {
+      pollTimer = setInterval(async () => {
+        try {
+          const pr = await fetch('/api/progress');
+          if (pr.ok) {
+            const st = await pr.json();
+            if (st.active) {
+              btn.textContent = `${st.message.toUpperCase()} (${Math.round(st.percent)}%)`;
+            }
+          }
+        } catch (_) {}
+      }, 350);
+    }
+
+    try {
+      let data = null;
+      if (hasElectron) {
+        data = await window.psyop.renderVideo(buildPayload());
+      } else {
+        const res = await fetch('/api/render', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(buildPayload())
+        });
+        if (!res.ok) throw new Error(await res.text());
+        data = await res.json();
+      }
+      showRenderOutput(data);
+      rerollSeed();
+    } catch (err) {
+      alert('Render failed: ' + err.message);
+    } finally {
+      if (pollTimer) clearInterval(pollTimer);
+      isRendering = false;
+      btn.disabled = false;
+      btn.textContent = 'RENDER';
+    }
+  }
+</script>
+</body>
+</html>
