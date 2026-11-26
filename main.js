@@ -3,7 +3,7 @@
  * Zero-copy local video ingestion + multi-batch fast-seek FFmpeg splicing.
  */
 
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -25,10 +25,10 @@ let mainWindow = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1080,
-    height: 860,
-    minWidth: 860,
-    minHeight: 700,
+    width: 980,
+    height: 615,
+    minWidth: 820,
+    minHeight: 575,
     backgroundColor: '#020203',
     autoHideMenuBar: true,
     icon: path.join(__dirname, 'psyoperator.ico'),
@@ -538,5 +538,16 @@ ipcMain.handle('shell:revealFile', (_event, filePath) => {
 ipcMain.handle('shell:openFile', (_event, filePath) => {
   if (filePath && fs.existsSync(filePath)) {
     shell.openPath(path.normalize(filePath));
+  }
+});
+
+ipcMain.handle('window:expandForResult', () => {
+  if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isMaximized()) return;
+  const [curW, curH] = mainWindow.getSize();
+  const display = screen.getDisplayMatching(mainWindow.getBounds());
+  const maxH = display ? display.workAreaSize.height - 24 : 940;
+  const targetH = Math.min(920, maxH);
+  if (curH < targetH) {
+    mainWindow.setSize(curW, targetH, true);
   }
 });

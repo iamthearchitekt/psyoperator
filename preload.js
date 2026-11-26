@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('psyop', {
   renderVideo: (payload) => ipcRenderer.invoke('video:render', payload),
   revealInFolder: (filePath) => ipcRenderer.invoke('shell:revealFile', filePath),
   openExternalPlayer: (filePath) => ipcRenderer.invoke('shell:openFile', filePath),
+  expandForResult: () => ipcRenderer.invoke('window:expandForResult'),
   onRenderProgress: (callback) => {
     const listener = (_event, data) => callback(data);
     ipcRenderer.on('render:progress', listener);

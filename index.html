@@ -26,10 +26,12 @@
       radial-gradient(ellipse at 50% 0%, rgba(120, 0, 15, 0.22) 0%, rgba(2, 2, 3, 0.98) 70%);
     color: var(--bone);
     font-family: "Consolas", "JetBrains Mono", "Lucida Console", "Courier New", monospace;
-    padding: 16px 22px 30px 22px;
+    padding: 14px 20px 16px 20px;
     max-width: 1040px;
     margin: 0 auto;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     position: relative;
     user-select: none;
   }
@@ -85,6 +87,11 @@
     padding: 18px;
     cursor: pointer;
     transition: 0.15s;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 118px;
   }
   .dropzone.dragover, .dropzone:hover {
     border-color: var(--crimson-bright);
@@ -636,6 +643,9 @@
   function showRenderOutput(data) {
     lastOutputPath = data.output_path;
     document.getElementById('resultBox').style.display = 'block';
+    if (hasElectron && typeof window.psyop.expandForResult === 'function') {
+      window.psyop.expandForResult();
+    }
     document.getElementById('resultSummary').textContent =
       `${data.num_segments} CUTS (${data.output_duration}S) RENDERED IN ${data.elapsed_sec}S -> ${data.output_path}`;
     const vid = document.getElementById('outputVideo');
